@@ -77,8 +77,7 @@ class Casino(commands.Cog):
 
         embed.add_field(
             name=f"__{ctx.author.display_name}'s Hand__",
-            value=f"{self._format_cards(player_hand)}
-**Score:** {player_total}",
+           value=f"{self._format_cards(player_hand)}\n**Score:** {player_total}",
             inline=False
         )
 
