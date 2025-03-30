@@ -1,0 +1,19 @@
+{
+    "author": [
+        "slixk"
+    ],
+    "install_msg": "\ud83c\udfb0 Blackjack, Roulette, and Three Card Poker cog installed! Good luck!",
+    "name": "casino",
+    "short": "A Casino cog with Blackjack, Roulette, and Three Card Poker.",
+    "description": "Gamble with virtual credits in Blackjack, Roulette, and Three Card Poker.",
+    "permissions": [],
+    "required_cogs": {},
+    "requirements": [],
+    "tags": [
+        "casino",
+        "games",
+        "blackjack",
+        "poker",
+        "roulette"
+    ]
+}
