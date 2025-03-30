@@ -192,10 +192,10 @@ class BlackjackView(View):
                 await interaction.response.send_message("You can only split matching cards on the first move.", ephemeral=True)
                 return
     deck = game["deck"]
-        player_hand = game["player"]
-        dealer_hand = game["dealer"]
-        bet = game["bet"]
-        msg = ""
+    player_hand = game["player"]
+    dealer_hand = game["dealer"]
+    bet = game["bet"]
+    msg = ""
 
         if hasattr(self, 'split_state') and self.split_state:
             current_hand = self.split_state.current + 1
