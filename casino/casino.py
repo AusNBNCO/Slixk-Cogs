@@ -76,10 +76,11 @@ class Casino(commands.Cog):
         )
 
         embed.add_field(
-    name=f"__{ctx.author.display_name}'s Hand__",
-    value=f"{self._format_cards(player_hand)}\n**Score:** {player_total}",
-    inline=False
-)
+            name=f"__{ctx.author.display_name}'s Hand__",
+            value=f"{self._format_cards(player_hand)}
+**Score:** {player_total}",
+            inline=False
+        )
 
         embed.add_field(
             name="Dealer's Visible Card",
@@ -180,8 +181,7 @@ class BlackjackView(View):
 
         msg = ""
         if self.split_state:
-            msg += f"**Now playing hand {self.split_state.current + 1} of {len(self.split_state.hands)}**
-"
+            msg += f"**Now playing hand {self.split_state.current + 1} of {len(self.split_state.hands)}**\n"
 
         if action == "split":
             if len(player_hand) == 2 and player_hand[0][0] == player_hand[1][0]:
@@ -203,8 +203,7 @@ class BlackjackView(View):
             card = deck.pop()
             player_hand.append(card)
             total = self.cog._hand_value(player_hand)
-            msg += f"You drew **{card[0]} of {card[1]}**.
-"
+            msg += f"You drew **{card[0]} of {card[1]}**.\n"
             if total >= 21:
                 action = "stand"
 
@@ -216,8 +215,7 @@ class BlackjackView(View):
             game["bet"] = bet * 2
             card = deck.pop()
             player_hand.append(card)
-            msg += f"**Double Down!** You drew **{card[0]} of {card[1]}**.
-"
+            msg += f"**Double Down!** You drew **{card[0]} of {card[1]}**.\n"
             action = "stand"
 
         if action == "stand":
@@ -252,8 +250,7 @@ class BlackjackView(View):
                         await bank.deposit_credits(interaction.user, bet)
                     else:
                         result = "Lose"
-                    split_result_text += f"**Hand {i+1}:** {self.cog._format_cards(hand)} (Score: {score}) — **{result}**
-"
+                    split_result_text += f"**Hand {i+1}:** {self.cog._format_cards(hand)} (Score: {score}) — **{result}**\n"
 
                 embed = discord.Embed(
                     title="🃏 Blackjack — Split Results",
@@ -303,14 +300,12 @@ class BlackjackView(View):
             )
             embed.add_field(
                 name=f"__{interaction.user.display_name}'s Hand__",
-                value=f"{self.cog._format_cards(player_hand)}
-**Score:** {player_total}",
+                value=f"{self.cog._format_cards(player_hand)}\n**Score:** {player_total}",
                 inline=False
             )
             embed.add_field(
                 name="Dealer's Hand",
-                value=f"{self.cog._format_cards(dealer_hand)}
-**Score:** {dealer_total}",
+                value=f"{self.cog._format_cards(dealer_hand)}\n**Score:** {dealer_total}",
                 inline=False
             )
             embed.add_field(
@@ -333,8 +328,7 @@ class BlackjackView(View):
             return
 
         total = self.cog._hand_value(player_hand)
-        msg += f"**Your hand:** {self.cog._format_cards(player_hand)} (Total: {total})
-"
+        msg += f"**Your hand:** {self.cog._format_cards(player_hand)} (Total: {total})\n"
         msg += "Choose to Hit, Stand, Split or Double."
         await interaction.response.edit_message(content=msg, view=self)
 
