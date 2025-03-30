@@ -113,7 +113,7 @@ class Casino(commands.Cog):
         desc = ""
         for i, (user, bal) in enumerate(top):
             medal = medals[i] if i < 3 else f"`#{i+1}`"
-            desc += f"{medal} **{user.display_name}** — `{bal}` credits\n""
+            desc += f"{medal} **{user.display_name}** — `{bal}` credits\n"
 
         embed = discord.Embed(
             title="💰 Server Credit Leaderboard",
