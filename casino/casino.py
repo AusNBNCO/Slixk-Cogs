@@ -90,9 +90,9 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed, view=BlackjackView(ctx, self))
 
 
-    @commands.command(name="topcredits", aliases=["leaderboard", "topbal"])
+    @commands.command(name="topcredits", aliases=["topbal"])
     async def top_credits(self, ctx):
-        """Show the top users with the most credits in the server."""
+        """Shows Slixk's Casino Top Gamblers."""
         guild = ctx.guild
         members = [m for m in guild.members if not m.bot]
         balances = []
