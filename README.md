@@ -9,7 +9,7 @@ A Red Discord Bot cog that lets users play:
 ## Install
 
 ```bash
-[p]repo add slixk https://github.com/yourname/slixk-casino-cog
+[p]repo add slixk https://github.com/AusNBNCO/Slixk-Cogs
 [p]cog install slixk casino
 ```
 
