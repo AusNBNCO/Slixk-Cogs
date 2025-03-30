@@ -45,8 +45,9 @@ class Casino(commands.Cog):
             aces -= 1
         return total
 
-    @commands.command(name="bj")
+    @commands.command(name="blackjack")
     async def blackjack_start(self, ctx, bet: int):
+        """Play a little Game of BlackJack."""
         user = ctx.author
         if bet < MIN_BET:
             await ctx.send(f"The minimum bet is {MIN_BET} credits.")
@@ -90,9 +91,9 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed, view=BlackjackView(ctx, self))
 
 
-    @commands.command(name="topcredits", aliases=["leaderboard", "topbal"])
+    @commands.command(name="Leaderboard", aliases=["topbal"])
     async def top_credits(self, ctx):
-        """Show the top users with the most credits in the server."""
+        """Shows The Top Slixk Casino Gamblers."""
         guild = ctx.guild
         members = [m for m in guild.members if not m.bot]
         balances = []
