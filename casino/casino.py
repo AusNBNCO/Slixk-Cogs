@@ -90,14 +90,53 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed, view=BlackjackView(ctx, self))
 
 
-    @commands.command(name="bjcancel")
-    async def blackjack_cancel(self, ctx):
-        user = ctx.author
-        if user.id in self.bj_games:
-            self.bj_games.pop(user.id)
-            await ctx.send("Your Blackjack game has been cancelled. Your bet is forfeited.")
-        else:
-            await ctx.send("You don't have an active Blackjack game.")
+    @commands.command(name="topcredits", aliases=["leaderboard", "topbal"])
+    async def top_credits(self, ctx):
+        """Show the top users with the most credits in the server."""
+        guild = ctx.guild
+        members = [m for m in guild.members if not m.bot]
+        balances = []
+
+        for member in members:
+            try:
+                bal = await bank.get_balance(member)
+                balances.append((member, bal))
+            except:
+                continue
+
+        top = sorted(balances, key=lambda x: x[1], reverse=True)[:10]
+        if not top:
+            await ctx.send("Nobody has credits yet.")
+            return
+
+        medals = ["🥇", "🥈", "🥉"]
+        desc = ""
+        for i, (user, bal) in enumerate(top):
+            medal = medals[i] if i < 3 else f"`#{i+1}`"
+            desc += f"{medal} **{user.display_name}** — `{bal}` credits\n"
+
+        embed = discord.Embed(
+            title="💰 Server Credit Leaderboard",
+            description=desc,
+            color=discord.Color.gold()
+        )
+        await ctx.send(embed=embed)
+
+
+
+class SplitState:
+    def __init__(self, hand1, hand2):
+        self.hands = [hand1, hand2]
+        self.current = 0
+        self.results = []
+
+    def current_hand(self):
+        return self.hands[self.current]
+
+    def advance(self):
+        self.current += 1
+        return self.current < len(self.hands)
+
 
 class BlackjackView(View):
     def __init__(self, ctx, cog, timeout: int = 180):
@@ -112,6 +151,12 @@ class BlackjackView(View):
     @button(label="Stand", style=discord.ButtonStyle.secondary)
     async def stand_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.handle_action(interaction, action="stand")
+
+    
+    @button(label="Split", style=discord.ButtonStyle.danger)
+    async def split_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_action(interaction, action="split")
+
 
     @button(label="Double", style=discord.ButtonStyle.success)
     async def double_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -128,11 +173,34 @@ class BlackjackView(View):
             self.stop()
             return
 
-        deck = game["deck"]
+    
+        # Offer split if first move and both cards match in rank
+        if action == "split":
+            if len(player_hand) == 2 and player_hand[0][0] == player_hand[1][0]:
+                if not await bank.can_spend(interaction.user, bet):
+                    await interaction.response.send_message("Not enough credits to split.", ephemeral=True)
+                    return
+                await bank.withdraw_credits(interaction.user, bet)
+                # Split hands
+                hand1 = [player_hand[0], deck.pop()]
+                hand2 = [player_hand[1], deck.pop()]
+                self.split_state = SplitState(hand1, hand2)
+                msg = f"**Split!** Playing hand 1 of 2: {self.cog._format_cards(hand1)}"
+                await interaction.response.edit_message(content=msg, view=self)
+                return
+            else:
+                await interaction.response.send_message("You can only split matching cards on the first move.", ephemeral=True)
+                return
+    deck = game["deck"]
         player_hand = game["player"]
         dealer_hand = game["dealer"]
         bet = game["bet"]
         msg = ""
+
+        if hasattr(self, 'split_state') and self.split_state:
+            current_hand = self.split_state.current + 1
+            total_hands = len(self.split_state.hands)
+            msg += f"**Now playing hand {current_hand} of {total_hands}**\n"
 
         if action == "hit":
             card = deck.pop()
@@ -154,6 +222,54 @@ class BlackjackView(View):
             action = "stand"
 
         if action == "stand":
+        if hasattr(self, 'split_state') and self.split_state:
+            total_winnings = 0
+            split_result_text = ""
+            for i, hand in enumerate(self.split_state.hands):
+                score = self.cog._hand_value(hand)
+                dealer_score = self.cog._hand_value(dealer_hand)
+                result = ""
+                hand_payout = 0
+                if score > 21:
+                    result = "Bust"
+                elif dealer_score > 21 or score > dealer_score:
+                    result = "Win"
+                    hand_payout = bet * 2
+                    total_winnings += hand_payout
+                    await bank.deposit_credits(interaction.user, hand_payout)
+                elif dealer_score == score:
+                    result = "Push"
+                    total_winnings += bet
+                    await bank.deposit_credits(interaction.user, bet)
+                else:
+                    result = "Lose"
+                split_result_text += f"**Hand {i+1}:** {self.cog._format_cards(hand)} (Score: {score}) — **{result}**\n"
+
+            embed = discord.Embed(
+                title="🃏 Blackjack — Split Results",
+                description=split_result_text,
+                color=discord.Color.green() if total_winnings else discord.Color.red()
+            )
+            embed.add_field(
+                name="Dealer's Hand",
+                value=f"{self.cog._format_cards(dealer_hand)} (Score: {dealer_score})",
+                inline=False
+            )
+            embed.add_field(
+                name="Total Winnings",
+                value=f"`{total_winnings}` credits" if total_winnings else "You lost both hands.",
+                inline=False
+            )
+            balance = await bank.get_balance(interaction.user)
+            embed.set_footer(text=f"Remaining Balance: {balance} credits")
+
+            self.cog.bj_games.pop(interaction.user.id, None)
+            for child in self.children:
+                child.disabled = True
+            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            self.stop()
+            return
+
             player_total = self.cog._hand_value(player_hand)
             dealer_total = self.cog._hand_value(dealer_hand)
             while dealer_total < 17:
@@ -181,7 +297,7 @@ class BlackjackView(View):
                 inline=False
             )
             embed.add_field(
-                name="OGG's Hand",
+                name="Dealer's Hand",
                 value=f"{self.cog._format_cards(dealer_hand)}\n**Score:** {dealer_total}",
                 inline=False
             )
