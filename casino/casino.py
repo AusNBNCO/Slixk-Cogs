@@ -220,34 +220,34 @@ class BlackjackView(View):
                 await interaction.response.edit_message(content=None, embed=embed, view=self)
                 return
 
-        elif action == "double":
-            if not await bank.can_spend(interaction.user, bet):
-                await interaction.response.send_message("Not enough credits to double down.", ephemeral=True)
-                return
-            await bank.withdraw_credits(interaction.user, bet)
-            game["bet"] = bet * 2
-            card = deck.pop()
-            player_hand.append(card)
-            total = self.cog._hand_value(player_hand)
-            msg += f"**Double Down!** You drew **{card[0]} of {card[1]}**."
+       elif action == "double":
+    if not await bank.can_spend(interaction.user, bet):
+        await interaction.response.send_message("Not enough credits to double down.", ephemeral=True)
+        return
+    await bank.withdraw_credits(interaction.user, bet)
+    game["bet"] = bet * 2
+    card = deck.pop()
+    player_hand.append(card)
+    total = self.cog._hand_value(player_hand)
+    msg += f"**Double Down!** You drew **{card[0]} of {card[1]}**."
 
-            embed = discord.Embed(
-                title="Slixk's 🎲 Casino | Blackjack (Double Down)",
-                color=discord.Color.green()
-            )
-            embed.add_field(
-                name=f"__{interaction.user.display_name}'s Hand__",
-                value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
-                inline=False
-            )
-            embed.add_field(
-                name="Dealer's Visible Card",
-                value=f"{dealer_hand[0][0]} {self.cog._format_cards([dealer_hand[0]])[-1].split()[-1]}",
-                inline=False
-            )
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
-            action = "stand"
-    
+    embed = discord.Embed(
+        title="Slixk's 🎲 Casino | Blackjack (Double Down)",
+        color=discord.Color.green()
+    )
+    embed.add_field(
+        name=f"__{interaction.user.display_name}'s Hand__",
+        value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
+        inline=False
+    )
+    embed.add_field(
+        name="Dealer's Visible Card",
+        value=f"{dealer_hand[0][0]} {self.cog._format_cards([dealer_hand[0]])[-1].split()[-1]}",
+        inline=False
+    )
+    await interaction.response.edit_message(content=None, embed=embed, view=self)
+    await self.handle_action(interaction, action="stand")
+    return    
 
         if action == "stand":
             if self.split_state:
