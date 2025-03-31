@@ -83,7 +83,7 @@ class Casino(commands.Cog):
 
         embed.add_field(
             name="Dealer's Visible Card",
-            value=f"{dealer_hand[0][0]} {self._format_cards([dealer_hand[0]])[-1].split()[-1]}",
+            value=f"{self.cog._format_cards([dealer_hand[0]])}",
             inline=False
         )
 
@@ -245,8 +245,9 @@ class BlackjackView(View):
                 value=f"{dealer_hand[0][0]} {self.cog._format_cards([dealer_hand[0]])[-1].split()[-1]}",
                 inline=False
             )
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
-            action = "stand"
+            await interaction.response.edit_message(contenct=None, embed=embed, view=self)
+            await self.handle_action(interaction, action="stand")
+            return
     
 
         if action == "stand":
