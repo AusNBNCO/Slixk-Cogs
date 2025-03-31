@@ -83,7 +83,7 @@ class Casino(commands.Cog):
 
         embed.add_field(
             name="Dealer's Visible Card",
-            value=f"{self.cog._format_cards([dealer_hand[0]])}",
+            value=f"{self._format_cards([dealer_hand[0]])}",
             inline=False
         )
 
