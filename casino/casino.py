@@ -1,7 +1,7 @@
 import random 
-import discord 
-from discord.ui import View, button 
-from redbot.core import commands, bank
+import discord  # type: ignore
+from discord.ui import View, button  # type: ignore
+from redbot.core import commands, bank # type: ignore
 
 MIN_BET = 500
 
@@ -45,9 +45,8 @@ class Casino(commands.Cog):
             aces -= 1
         return total
 
-    @commands.command(name="blackjack")
+    @commands.command(name="bj")
     async def blackjack_start(self, ctx, bet: int):
-        """Play a little Game of BlackJack."""
         user = ctx.author
         if bet < MIN_BET:
             await ctx.send(f"The minimum bet is {MIN_BET} credits.")
@@ -91,9 +90,9 @@ class Casino(commands.Cog):
         await ctx.send(embed=embed, view=BlackjackView(ctx, self))
 
 
-    @commands.command(name="Leaderboard", aliases=["topbal"])
+    @commands.command(name="topcredits", aliases=["leaderboard", "topbal"])
     async def top_credits(self, ctx):
-        """Shows The Top Slixk Casino Gamblers."""
+        """Show the top users with the most credits in the server."""
         guild = ctx.guild
         members = [m for m in guild.members if not m.bot]
         balances = []
