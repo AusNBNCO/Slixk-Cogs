@@ -168,9 +168,57 @@ class BlackjackView(View):
             self.stop()
             return
 
+    async def resolve_game(self, interaction, game, player_hand):
         deck = game["deck"]
         bet = game["bet"]
         dealer_hand = game["dealer"]
+
+        player_total = self.cog._hand_value(player_hand)
+        dealer_total = self.cog._hand_value(dealer_hand)
+
+        while dealer_total < 17:
+            dealer_hand.append(deck.pop)
+            dealer_total = self.cog._hand_value(dealer_hand)
+
+        payout = 0
+        result = "House Wins!"
+        if player_total > 21:
+            result = "You Busted!"
+        elif dealer_total > 21 or player_total > dealer_total:
+            payout = bet * 2
+            result = "You Win!"
+            await bank.deposit_credits(interaction.user, payout)
+        
+        embed = discord.Embed(
+            title="Slixk's 🎲 Casino | Blackjack",
+            color=discord.Color.green() if payout else discord.Color.red()
+        )
+        embed.add_field(
+            name=f"__{interaction.user.display_name}'s Hand__",
+            value=f"{self.cog._format_cards(player_hand)}\n**Score:** {player_total}",
+            inline=False
+        )
+        embed.add_field(
+            name="Dealer's Hand",
+            value=f"{self.cog._format_cards(dealer_hand)}\n**Score:** {dealer_total}",
+            inline=False
+        )
+        embed.add_field(name="**Outcome:**", value=result, inline=False)
+        embed.add_field(
+            name="",
+            value=f"You won `{payout}` credits!" if payout else "Sorry you didn't win anything." if result != "Push!" else "Your bet was returned.",
+            inline=False
+        )
+        balance = await bank.get_balance(interaction.user)
+        embed.set_footer(text=f"Remaining Balance: {balance} credits")
+
+        self.cog.bj_games.pop(interaction.user.id, None)
+        for child in self.children:
+            child.disabled = True
+
+
+        await interaction.response.edit_message(content=None, embed=embed, view=self)
+        self.stop()
 
         player_hand = (
             self.split_state.current_hand()
@@ -277,7 +325,8 @@ class BlackjackView(View):
 
             # Proceed to stand resolution if not busted
             await interaction.response.edit_message(content=None, embed=embed, view=self)
-            await self.handle_action(interaction, action="stand")
+            await interaction.followup.defer()
+            await self.resolve_game(interaction, game, player_hand)
             return
     
         if action == "stand":
