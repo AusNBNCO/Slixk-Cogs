@@ -200,7 +200,11 @@ class BlackjackView(View):
             player_hand.append(card)
             total = self.cog._hand_value(player_hand)
             msg += f"You drew **{card[0]} of {card[1]}**."
-            if total >= 21:
+
+            if total == 21:
+                msg += "\n**Blackjack!**"
+                actions = "stand"
+            elif total >= 21:
                 action = "stand"
             else:
                 embed = discord.Embed(
@@ -221,9 +225,14 @@ class BlackjackView(View):
                 return
 
         elif action == "double":
+            if self.split_state:
+              await interaction.response.send_message("You cannot double down after a split.", ephemeral=True)
+              return
+            
             if not await bank.can_spend(interaction.user, bet):
                 await interaction.response.send_message("Not enough credits to double down.", ephemeral=True)
                 return
+
             await bank.withdraw_credits(interaction.user, bet)
             game["bet"] = bet * 2
             card = deck.pop()
@@ -245,11 +254,32 @@ class BlackjackView(View):
                 value=f"{dealer_hand[0][0]} {self.cog._format_cards([dealer_hand[0]])[-1].split()[-1]}",
                 inline=False
             )
-            await interaction.response.edit_message(contenct=None, embed=embed, view=self)
+
+            if total > 21:
+                embed.add_field(
+                    name="**Outcome:**",
+                    value="**You Busted!**",
+                    inline=False
+                )
+                embed.add_field(
+                    name="​",
+                    value="You lost your bet.",
+                    inline=False
+                )
+                balance = await bank.get_balance(interaction.user)
+                embed.set_footer(text=f"Remaining Balance: {balance} credits")
+                self.cog.bj_games.pop(interaction.user.id, None)
+                for child in self.children:
+                    child.disabled = True
+                await interaction.response.edit_message(content=None, embed=embed, view=self)
+                self.stop()
+                return
+
+            # Proceed to stand resolution if not busted
+            await interaction.response.edit_message(content=None, embed=embed, view=self)
             await self.handle_action(interaction, action="stand")
             return
     
-
         if action == "stand":
             if self.split_state:
                 if self.split_state.advance():
