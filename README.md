@@ -3,8 +3,8 @@
 A Red Discord Bot cog that lets users play:
 
 - 🃏 **Blackjack** (with buttons: Hit, Stand, Double)
-- 🎰 **Roulette** (Red/Black, Odd/Even, numbers 0–36)
-- 🂽 **Three Card Poker**
+- 🎰 **Roulette** (Red/Black, Odd/Even, numbers 0–36)**Disabled**
+- 🂽 **Three Card Poker** **Comming Soon**
 
 ## Install
 
@@ -16,6 +16,3 @@ A Red Discord Bot cog that lets users play:
 ## Commands
 
 - `[p]bj <bet>` — Start a game of Blackjack
-- `[p]bjcancel` — Cancel current Blackjack game
-- `[p]roulette <bet> <option>` — Play Roulette
-- `[p]threecard <bet>` — Play Three Card Poker
