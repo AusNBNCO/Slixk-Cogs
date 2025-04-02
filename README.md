@@ -3,8 +3,8 @@
 A Red Discord Bot cog that lets users play:
 
 - 🃏 **Blackjack** (with buttons: Hit, Stand, Double)
-- 🎰 --Roulette-- (Red/Black, Odd/Even, numbers (0–36) **Disabled**
-- 🂽 --Three Card Poker-- **Comming Soon**
+- 🎰 ~~Roulette (Red/Black, Odd/Even, numbers (0–36)~~ **Disabled**
+- 🂽 ~~Three Card Poker~~ **Comming Soon**
 
 ## Install
 
