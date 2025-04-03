@@ -121,10 +121,9 @@ class BlackjackView(View):
             player_hand.append(card)
             total = self.cog._hand_value(player_hand)
             
-            if total > 21:
-                
-                embed = discord.embed(title="Slixk's 🎲 Casino | Blackjack - Bust",
-                color=discord.color.red()
+            if total >= 21:
+                embed = discord.embed(title="Slixk's 🎲 Casino | Blackjack",
+                color=discord.color.red() if total > 21 else discord.color.green()
                 )
                 embed.add_field(
                     name=f"__{interaction.user.display_name}'s Hand__",
@@ -136,21 +135,22 @@ class BlackjackView(View):
                     value=f"{self.cog._format_cards([dealer_hand[0]])}",
                     inline=False
                 )
-                embed.add_field(
-                    name="Outcome:",
-                    value="**Busted! House Wins.**",
-                    inline=False
-                )
-                self.cog.bj_games.pop(interaction.user.id, None)
-                for child in self.children:
-                    child.disabled = True
-                await interaction.response.edit_message(content=None, embed=embed, view=self)
-                self.stop
-                return
                 
-            elif total == 21:
-                await self.handle_action(interaction, "stand")
-                return
+                if total > 21:
+                    embed.add_field(name="**Outcome:**", value="**Busted! House Wins.**", inline=False)
+                    self.cog.bj_games.pop(interaction.user.id, None)
+                    for child in self.children:
+                        child.disabled = True
+                    await interaction.response.edit_message(content=None, embed=embed, view=self)
+                    self.stop
+                    return
+                else:
+                    embed.add_field(name="**Note:**", value="**21! Standing automically...**", inline=False)
+                    await interaction.response.edit_message(content=None, embed=embed, view=self)
+                    await self.handle_action(interaction, "stand")
+                    return
+    
+            # Normal logic if not bust or 21
             embed = discord.Embed(
                 title="Slixk's 🎲 Casino | Blackjack",
                 color=discord.Color.blurple()
