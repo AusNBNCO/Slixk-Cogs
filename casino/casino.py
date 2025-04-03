@@ -72,7 +72,7 @@ class Casino(commands.Cog):
         )
         embed.add_field(
             name=f"__{ctx.author.display_name}'s Hand__",
-            value=f"{self._format_cards(player_hand)}**Score:** {player_total}",
+            value=f"{self._format_cards(player_hand)}\n**Score:** {player_total}",
             inline=False
         )
         embed.add_field(
@@ -81,6 +81,7 @@ class Casino(commands.Cog):
             inline=False
         )
         await ctx.send(embed=embed, view=BlackjackView(ctx, self))
+
 
 class BlackjackView(View):
     def __init__(self, ctx, cog, timeout: int = 180):
@@ -105,11 +106,11 @@ class BlackjackView(View):
             await interaction.response.send_message("This is not your game!", ephemeral=True)
             return
 
-        await interaction.response.defer()
-        
+        await interaction.response.defer(thinking=False)
+
         game = self.cog.bj_games.get(interaction.user.id)
         if not game:
-            await interaction.response.send_message("No active game found.", ephemeral=True)
+            await interaction.followup.send("No active game found.", ephemeral=True)
             self.stop()
             return
 
@@ -122,17 +123,16 @@ class BlackjackView(View):
             card = deck.pop()
             player_hand.append(card)
             total = self.cog._hand_value(player_hand)
-            
-            if total > 21:
 
-                #Bust
+            if total > 21:
+                # Bust
                 embed = discord.Embed(
-                    titles="Slixk's 🎲 Casino | Blackjack - Bust",
+                    title="Slixk's 🎲 Casino | Blackjack - Bust",
                     color=discord.Color.red()
                 )
                 embed.add_field(
                     name=f"__{interaction.user.display_name}'s Hand__",
-                    value=f"{self.cog._format_cards(player_hand)}**Score:** {total}",
+                    value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
                     inline=False
                 )
                 embed.add_field(
@@ -141,16 +141,14 @@ class BlackjackView(View):
                     inline=False
                 )
                 embed.add_field(name="**Outcome:**", value="**Bust!**", inline=False)
-
                 self.cog.bj_games.pop(interaction.user.id, None)
                 for child in self.children:
                     child.disabled = True
-                await interaction.response.edit_message(content=None, embed=embed, view=self)
+                await interaction.edit_original_response(content=None, embed=embed, view=self)
                 self.stop()
                 return
-            
-            elif total == 21:
 
+            elif total == 21:
                 # Blackjack
                 embed = discord.Embed(
                     title="Slixk's 🎲 Casino | Blackjack - Blackjack",
@@ -158,7 +156,7 @@ class BlackjackView(View):
                 )
                 embed.add_field(
                     name=f"__{interaction.user.display_name}'s Hand__",
-                    value=f"{self.cog._format_cards(player_hand)}**Score:** {total}",
+                    value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
                     inline=False
                 )
                 embed.add_field(
@@ -166,21 +164,20 @@ class BlackjackView(View):
                     value=f"{self.cog._format_cards([dealer_hand[0]])}",
                     inline=False
                 )
-                embed.add_field(name="**Outcome:**", value="**Blackjack!**", inline=False)
-
-                await interaction.response.edit_message(content=None, embed=embed, view=self)
+                embed.add_field(name="**Outcome:**", value="**Blackjack! Standing...**", inline=False)
+                await interaction.edit_original_response(content=None, embed=embed, view=self)
                 await self.handle_action(interaction, "stand")
                 return
-            
+
             else:
-                # Normal case not Bust, not Blackjack
+                # Continue playing
                 embed = discord.Embed(
                     title="Slixk's 🎲 Casino | Blackjack",
                     color=discord.Color.blurple()
                 )
                 embed.add_field(
                     name=f"__{interaction.user.display_name}'s Hand__",
-                    value=f"{self.cog._format_cards(player_hand)}**Score:** {total}",
+                    value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
                     inline=False
                 )
                 embed.add_field(
@@ -188,13 +185,14 @@ class BlackjackView(View):
                     value=f"{self.cog._format_cards([dealer_hand[0]])}",
                     inline=False
                 )
-                await interaction.response.edit_message(content=None, embed=embed, view=self)
+                await interaction.edit_original_response(content=None, embed=embed, view=self)
                 return
 
         elif action == "double":
             if not await bank.can_spend(interaction.user, bet):
-                await interaction.response.send_message("Not enough credits to double down.", ephemeral=True)
+                await interaction.followup.send("Not enough credits to double down.", ephemeral=True)
                 return
+
             await bank.withdraw_credits(interaction.user, bet)
             game["bet"] = bet * 2
             card = deck.pop()
@@ -224,12 +222,12 @@ class BlackjackView(View):
             )
             embed.add_field(
                 name=f"__{interaction.user.display_name}'s Hand__",
-                value=f"{self.cog._format_cards(player_hand)}**Score:** {player_total}",
+                value=f"{self.cog._format_cards(player_hand)}\n**Score:** {player_total}",
                 inline=False
             )
             embed.add_field(
                 name="Dealer's Hand",
-                value=f"{self.cog._format_cards(dealer_hand)}**Score:** {dealer_total}",
+                value=f"{self.cog._format_cards(dealer_hand)}\n**Score:** {dealer_total}",
                 inline=False
             )
             embed.add_field(name="**Outcome:**", value=f"**{result}**", inline=False)
@@ -239,7 +237,7 @@ class BlackjackView(View):
             self.cog.bj_games.pop(interaction.user.id, None)
             for child in self.children:
                 child.disabled = True
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            await interaction.edit_original_response(content=None, embed=embed, view=self)
             self.stop()
             return
 
@@ -266,12 +264,12 @@ class BlackjackView(View):
             )
             embed.add_field(
                 name=f"__{interaction.user.display_name}'s Hand__",
-                value=f"{self.cog._format_cards(player_hand)}**Score:** {player_total}",
+                value=f"{self.cog._format_cards(player_hand)}\n**Score:** {player_total}",
                 inline=False
             )
             embed.add_field(
                 name="Dealer's Hand",
-                value=f"{self.cog._format_cards(dealer_hand)}**Score:** {dealer_total}",
+                value=f"{self.cog._format_cards(dealer_hand)}\n**Score:** {dealer_total}",
                 inline=False
             )
             embed.add_field(name="**Outcome:**", value=f"**{result}**", inline=False)
@@ -281,8 +279,9 @@ class BlackjackView(View):
             self.cog.bj_games.pop(interaction.user.id, None)
             for child in self.children:
                 child.disabled = True
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            await interaction.edit_original_response(content=None, embed=embed, view=self)
             self.stop()
+
 
 async def setup(bot):
     await bot.add_cog(Casino(bot))
