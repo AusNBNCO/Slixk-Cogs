@@ -120,7 +120,35 @@ class BlackjackView(View):
             card = deck.pop()
             player_hand.append(card)
             total = self.cog._hand_value(player_hand)
-            if total >= 21:
+            
+            if total > 21:
+                
+                embed = discord.embed(title="Slixk's 🎲 Casino | Blackjack - Bust",
+                color=discord.color.red()
+                )
+                embed.add_field)
+                    name=f"__{interaction.user.display_name}'s Hand__",
+                    value=f"{self.cog._format_cards(player_hand)}\n**Score:** {total}",
+                    inlime=False
+                )
+                embed.add_field(
+                    name="Dealer's Visible Card",
+                    value=f"{self.cog._format_cards([dealer_hand[0]])}",
+                    inline=False
+                )
+                embed.add_field(
+                    name="Outcome:",
+                    value="**Busted! House Wins.**",
+                    inline=False
+                )
+                self.cog.bj_games.pop(interaction.user.id, None)
+                for child in self.children:
+                    child.disabled = True
+                await interaction.response.edit_message(content=None, embed=embed view=self)
+                self.stop
+                return
+                
+            elif total == 21:
                 await self.handle_action(interaction, "stand")
                 return
             embed = discord.Embed(
