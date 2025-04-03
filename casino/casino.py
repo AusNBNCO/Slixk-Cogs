@@ -105,6 +105,8 @@ class BlackjackView(View):
             await interaction.response.send_message("This is not your game!", ephemeral=True)
             return
 
+        await interaction.response.defer()
+        
         game = self.cog.bj_games.get(interaction.user.id)
         if not game:
             await interaction.response.send_message("No active game found.", ephemeral=True)
